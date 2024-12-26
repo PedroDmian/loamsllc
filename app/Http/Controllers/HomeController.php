@@ -158,17 +158,19 @@ class HomeController extends Controller
             $transaction->save();
 
             foreach ($games as $key => $game) :
-                $transaction->lines()->createMany(
-                    collect($get_ticket->tickets)
-                        ->splice($ticket_index, $game['quantity'])
-                        ->map(function ($ticket) use ($transaction, $game) {
+                $items = collect($get_ticket->tickets_group_format)->splice($ticket_index, $game['quantity']);
+
+                foreach ($items as $key => $item) :
+                    $transaction->lines()->createMany(
+                        collect($item)->map(function ($ticket) use ($transaction, $game) {
                             return [
                                 'ticket_id' => $ticket->id,
                                 'transaction_id' => $transaction->id,
                                 'game_id' => $game['id']
                             ];
                         })->toArray()
-                );
+                    );
+                endforeach;
 
                 $ticket_index += $game['quantity'];
             endforeach;
@@ -179,39 +181,55 @@ class HomeController extends Controller
         }
     }
 
-    private function get_ticket($total_tickets)
+    public function get_ticket($total_tickets)
     {
         $data = (object)[];
-        $data->tickets = null;
+        $data->tickets_group = null;
+        $data->tickets_group_format = [];
 
-        $transaction_latest_first = Transaction::with('lines')->latest()->first();
-        $last_ticket = null;
+        for ($key = 1; $key <= 25; $key++) :
+            $transaction_latest_first = Transaction::whereHas('lines.ticket', function ($query) use ($key) {
+                $query->where('ticket_index', $key);
+            })->with(['lines' => function ($query) use ($key) {
+                $query->whereHas('ticket', function ($query) use ($key) {
+                    $query->where('ticket_index', $key);
+                });
+            }])->latest()->first();
 
-        // ? Obtener el ultimo linea de ticket
-        if ($transaction_latest_first) :
-            $last_ticket = $transaction_latest_first->lines->last();
-        endif;
+            $last_ticket = null;
 
-        $tickets_available = collect([]);
+            // ? Obtener el ultimo linea de ticket
+            if ($transaction_latest_first) :
+                $last_ticket = $transaction_latest_first->lines->last();
+            endif;
 
-        // ? si no hay tickets ya disponibles iniciar desde el 1
-        if (!$last_ticket) :
-            $tickets_available = Ticket::orderBy('id')->take($total_tickets)->get();
-        endif;
+            $tickets_available = collect([]);
 
-        // ? si hay tickets disponibles inciar desde la linea
-        if ($last_ticket) :
-            $tickets_available = Ticket::where('id', '>', $last_ticket->ticket_id)->orderBy('id')->take($total_tickets)->get();
-        endif;
+            // ? si no hay tickets ya disponibles iniciar desde el 1
+            if (!$last_ticket) :
+                $tickets_available = Ticket::where('ticket_index', $key)->orderBy('id')->take($total_tickets)->get();
+            endif;
 
-        if ($tickets_available->count() < $total_tickets) :
-            $remaining_tickets = $total_tickets - $tickets_available->count();
-            $get_tickets_remaining = Ticket::orderBy('id')->take($remaining_tickets)->get();
+            // ? si hay tickets disponibles inciar desde la linea
+            if ($last_ticket) :
+                $tickets_available = Ticket::where('ticket_index', $key)->where('id', '>', $last_ticket->ticket_id)->orderBy('id')->take($total_tickets)->get();
+            endif;
 
-            $tickets_available = $tickets_available->merge($get_tickets_remaining);
-        endif;
+            if ($tickets_available->count() < $total_tickets) :
+                $remaining_tickets = $total_tickets - $tickets_available->count();
+                $get_tickets_remaining = Ticket::where('ticket_index', $key)->orderBy('id')->take($remaining_tickets)->get();
 
-        $data->tickets = $tickets_available;
+                $tickets_available = $tickets_available->merge($get_tickets_remaining);
+            endif;
+
+            $data->tickets_group[] = $tickets_available;
+        endfor;
+
+        for ($index = 0; $index < $total_tickets; $index++) :
+            for ($key = 0; $key < 25; $key++) :
+                $data->tickets_group_format[$index][] = $data->tickets_group[$key][$index];
+            endfor;
+        endfor;
 
         return $data;
     }
@@ -265,29 +283,34 @@ class HomeController extends Controller
             }
 
             // ? Mandar un email
-            $data = [
-                'name' => $transaction->email,
-                'order_number' => $order_id,
-                'payment_id' => $payment_id,
-                'date_transaction' => $transaction->created_at->format('F d, Y'),
-                'total_paid' => "$ " . number_format((float) $transaction->price / 100, 2),
-                'email' => $transaction->email,
-                'lines' => $transaction->lines->map(function ($line) {
-                    $line->game = collect($this->games)->filter(function ($game) use ($line) {
-                        return $game->id == $line->game_id;
-                    })->first();
+            $lines = $transaction->lines->map(function ($line) {
+                $line->game = collect($this->games)->filter(function ($game) use ($line) {
+                    return $game->id == $line->game_id;
+                })->first();
 
-                    $data = (object)[];
-                    $data->game = $line->game->name;
-                    $data->ticket = $line->ticket;
+                $data = (object)[];
+                $data->game = $line->game->name;
+                $data->ticket = $line->ticket;
 
-                    return $data;
-                })
-            ];
+                return $data;
+            })->chunk(25);
 
-            Mail::send('emails.send_tickets', $data, function ($message) use ($transaction) {
-                $message->to($transaction->email, $transaction->name)->subject('Payment Success');
-            });
+            foreach ($lines as $key => $line) :
+                $data = [
+                    'name' => $transaction->email,
+                    'order_number' => $order_id,
+                    'payment_id' => $payment_id,
+                    'date_transaction' => $transaction->created_at->format('F d, Y'),
+                    'total_paid' => "$ " . number_format((float) $transaction->price / 100, 2),
+                    'email' => $transaction->email,
+                    'lines' => $line,
+                    'game_name' => $line->first()->game
+                ];
+
+                Mail::send('emails.send_tickets', $data, function ($message) use ($transaction, $data) {
+                    $message->to($transaction->email, $transaction->name)->subject('Payment Success - Game Tickets ' . $data['game_name']);
+                });
+            endforeach;
 
             $transaction->status = $status;
             $transaction->send_email = true;

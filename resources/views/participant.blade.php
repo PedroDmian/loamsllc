@@ -1,4 +1,16 @@
 <x-core-layout>
+    <div class="loader-content">
+        <div>
+            <div class="custom-loader"></div>
+
+            <div>
+                <h1 style="font-weight: bold; margin-top: 20px;">
+                    Loader
+                </h1>
+            </div>
+        </div>
+    </div>
+
     <!-- Hero Section -->
     <section class="bg-gradient-to-r from-purple-500 to-blue-500 text-white py-12 w-full h-[90vh] md:h-[93vh] flex items-center relative z-100" id="section-presentation">
         <div class="absolute top-0 left-1/4 sm:left-1/3">

@@ -426,6 +426,22 @@
                                                                     padding: 10px;
                                                                 "
                                                             >
+                                                              Game
+                                                            </td>
+                                                            <td
+                                                                style="
+                                                                    padding: 10px;
+                                                                "
+                                                            >
+                                                                {{ $game_name }}
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td
+                                                                style="
+                                                                    padding: 10px;
+                                                                "
+                                                            >
                                                               Payment
                                                             </td>
                                                             <td
@@ -489,7 +505,7 @@
                                                                 background-color: #f2f2f2;
                                                             "
                                                         >
-                                                            <td colspan="7">
+                                                            <td colspan="6">
                                                                 <p
                                                                     style="
                                                                         text-align: center;
@@ -508,14 +524,14 @@
                                                                 background-color: #f2f2f2;
                                                             "
                                                         >
-                                                            <td style="
+                                                            {{-- <td style="
                                                             padding: 10px;
                                                             font-weight: bold;
                                                             text-align: center;
                                                             width: 60px;
                                                           ">
 														  	Num Ticket
-                                                            </td>
+                                                            </td> --}}
                                                             <td
                                                               colspan="6"
                                                                 style="
@@ -531,15 +547,15 @@
                                                     <tbody>
                                                         @foreach($lines as $index => $line)
                                                           <tr>
-															<td style="text-align: center; max-width: 60px; padding: 10px 0px;">
-																{{ $line->game  }} - ({{ $index + 1 }})
-															</td>
-                                                            <td style="text-align: center; padding: 10px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_one }}</span></td>
-                                                            <td style="text-align: center; padding: 10px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_two }}</span></td>
-                                                            <td style="text-align: center; padding: 10px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_three }}</span></td>
-                                                            <td style="text-align: center; padding: 10px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_four }}</span></td>
-                                                            <td style="text-align: center; padding: 10px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_five }}</span></td>
-                                                            <td style="text-align: center; padding: 10px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_six }}</span></td>
+															{{-- <td style="text-align: center; max-width: 60px; padding: 10px 0px;">
+																{{ $line->game  }} ({{ $index + 1 }})
+															</td> --}}
+                                                            <td style="height: 5px; margin: 0px !important; text-align: center; padding: 5px 0px;"><span style="background-color: #000000; border-radius: 5px; padding: 5px; color: #ffffff;">{{ $line->ticket->num_one }}</span></td>
+                                                            <td style="height: 5px; margin: 0px !important; text-align: center; padding: 5px 0px;"><span style="background-color: #000000; border-radius: 5px; padding: 5px; color: #ffffff;">{{ $line->ticket->num_two }}</span></td>
+                                                            <td style="height: 5px; margin: 0px !important; text-align: center; padding: 5px 0px;"><span style="background-color: #000000; border-radius: 5px; padding: 5px; color: #ffffff;">{{ $line->ticket->num_three }}</span></td>
+                                                            <td style="height: 5px; margin: 0px !important; text-align: center; padding: 5px 0px;"><span style="background-color: #000000; border-radius: 5px; padding: 5px; color: #ffffff;">{{ $line->ticket->num_four }}</span></td>
+                                                            <td style="height: 5px; margin: 0px !important; text-align: center; padding: 5px 0px;"><span style="background-color: #000000; border-radius: 5px; padding: 5px; color: #ffffff;">{{ $line->ticket->num_five }}</span></td>
+                                                            <td style="height: 5px; margin: 0px !important; text-align: center; padding: 5px 0px;"><span style="background-color: #F8285A; border-radius: 5px; padding: 5px; color: #000000;">{{ $line->ticket->num_six }}</span></td>
                                                           </tr>
                                                         @endforeach
                                                     </tbody>

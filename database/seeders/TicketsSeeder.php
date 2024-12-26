@@ -18,8 +18,8 @@ class TicketsSeeder extends Seeder
 
         for ($i = 1; $i <= $total_files; $i++) {
             $filename = "numbers_{$i}.csv";
-            $insert_data = array_map(function ($item) {
-                return "INSERT INTO tickets (num_one, num_two, num_three, num_four, num_five, num_six, created_at, updated_at) VALUES ($item[0], $item[1], $item[2], $item[3], $item[4], $item[5], now(), now());\n";
+            $insert_data = array_map(function ($item) use ($i) {
+                return "INSERT INTO tickets (ticket_index, num_one, num_two, num_three, num_four, num_five, num_six, created_at, updated_at) VALUES ($i, $item[0], $item[1], $item[2], $item[3], $item[4], $item[5], now(), now());\n";
             }, $this->get_array($filename));
 
             File::append(storage_path('app/tickets-' . $i . '.sql'), implode("", $insert_data));

@@ -124,6 +124,8 @@ $('body').on('click', '#payment-btn', async function() {
   const games = getGames();
   const getEmail = $('input[name=email]').val();
 
+  $('.loader-content').css('display', 'flex');
+
   if(!getEmail) {
     return $.toast({
       heading: 'Warning',
@@ -148,6 +150,8 @@ $('body').on('click', '#payment-btn', async function() {
       email: getEmail
     });
 
+    $('.loader-content').css('display', 'none');
+
     $.toast({
       heading: 'Success',
       text: 'Thank you',
@@ -157,6 +161,8 @@ $('body').on('click', '#payment-btn', async function() {
   
     window.location.href = response.paymentLinkUrl; 
   } catch (error) {
+    $('.loader-content').css('display', 'none');
+
     return $.toast({
       heading: 'Warning',
       text: error.message || 'Error when buying tickets try again later',
@@ -177,6 +183,7 @@ const getQuery = (method, url, params = null) => {
     $.ajax({
       type: method,
       url: url,
+      setTimeout: 300,
       contentType: 'application/json',
       data: JSON.stringify(params),
       success: (response) => resolve(response),
